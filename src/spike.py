@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Created on Tue Mar 18 10:33:58 2025
+
+@author: exx
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Tue Mar  4 11:11:00 2025
 
 @author: exx
@@ -16,7 +23,6 @@ from torch.utils.data import Dataset
 import numpy as np
 load = True # Load in model checkpoint
 notdoa= False
-normtdoa=True
 # Harsh loss function
 # TODO: May have to redefine harsh loss for new simulation dataset
 def harshloss(output, target,e):
@@ -52,12 +58,7 @@ class CustomDataset(Dataset):
             for v1i in range(len(vector1)):
                 vector1[v1i][3]=0
             for v2i in range(len(vector2)):
-                vector2[v2i][3]=0
-        if normtdoa:
-            for v1i in range(len(vector1)):
-                vector1[v1i][3]=vector1[v1i][3]/(1/2.7e9)
-            for v2i in range(len(vector2)):
-                vector2[v2i][3]=vector2[v2i][3]/(1/2.7e9)
+                vector1[v2i][3]=0
         label = torch.tensor(chunk[2], dtype=torch.float32).to(device)
         return (vector1, vector2), label
 
@@ -76,13 +77,13 @@ def dataload():
     #print(training_data[2])
     #training_dataset_sampledBB.npz
     
-    training_data = np.rot90(np.load('training_dataset_sampledBB.npz', allow_pickle=True)['data'])
+    training_data = np.rot90(np.load('training_dataset_sampled.npz', allow_pickle=True)['data'])
     training_dataset = CustomDataset(training_data)
     train_dataloader = DataLoader(training_dataset, batch_size=batch_size, shuffle=True)
     
     # TODO: Why is the same dataset being used for both training and testing?
     #testing_data = np.load('airsim1.npz', allow_pickle=True)['data']
-    testing_data = np.rot90(np.load('testing_dataset_sampledBB.npz', allow_pickle=True)['data'])
+    testing_data = np.rot90(np.load('testing_dataset_sampled.npz', allow_pickle=True)['data'])
     testing_dataset = CustomDataset(testing_data)
     test_dataloader = DataLoader(testing_dataset, batch_size=1, shuffle=True)
     for X, y in test_dataloader:
@@ -127,7 +128,7 @@ loss_fn = nn.MSELoss()
 #loss_fn = harshloss()
 optimizer = torch.optim.SGD(model.parameters(), lr=1e-6)
 if load:
-    checkpoint = torch.load('bb10', weights_only=True)
+    checkpoint = torch.load('spike25000', weights_only=True)
     model.load_state_dict(checkpoint['model_state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     # Train the model with training dataset
@@ -177,14 +178,14 @@ def test(dataloader, model, loss_fn):
     print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
     
 # Performs training and testing over many epochs
-epochs = 10000
+epochs = 25000
 for t in range(epochs):
     print(f"Epoch {t+1}\n-------------------------------")
     train_loop(train_dataloader, model, loss_fn, optimizer)
     test(test_dataloader, model, loss_fn)
 test(test_dataloader, model, loss_fn)
 print("Done!")
-torch.save(model.state_dict(), 'norm10000.pth')#current one training
+torch.save(model.state_dict(), 'spike50000.pth')#current one training
 torch.save({
             'model_state_dict': model.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict()}, 'norm10000')#doing 2 rn
+            'optimizer_state_dict': optimizer.state_dict()}, 'spike50000')#doing 2 rn

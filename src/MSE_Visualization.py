@@ -148,7 +148,7 @@ label_coords = triangulate(testing_labels)
 predicted_coords = predicted_coords[:n]
 label_coords = np.nan_to_num(label_coords, copy=False, nan=0.0, posinf=0, neginf=0)
 
-# TODO: Compare MSE loss of two triangulated positions
+# Compare MSE loss of two triangulated positions
 mse = (np.square(predicted_coords - label_coords)).mean(axis=1)
 avgMSE = np.mean(mse)
 print(f"Average MSE for predicted and actual coordinates: {avgMSE}")

@@ -1,4 +1,3 @@
- 
 # -*- coding: utf-8 -*-
 """
 Created on Sat Mar 15 18:52:42 2025
@@ -82,7 +81,7 @@ d2 = ant2
 model = NeuralNetwork().to(device)
 optimizer = torch.optim.SGD(model.parameters(), lr=1e-6)
 
-checkpoint = torch.load("modelcheckpointBB", weights_only=True)
+checkpoint = torch.load("modelcheckpointbbattempt2", weights_only=True)
 model.load_state_dict(checkpoint['model_state_dict'])
 optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 model.eval()
@@ -92,7 +91,7 @@ training_data = np.rot90(np.load('airsimBB1.npz', allow_pickle=True)['data'])
 training_dataset = CustomDataset(training_data)
 train_dataloader = DataLoader(training_dataset, batch_size=batch_size, shuffle=True)
 
-testing_data = np.rot90(np.load('airsimBB2.npz', allow_pickle=True)['data'])
+testing_data = np.rot90(np.load('testing_dataset_sampledBB.npz', allow_pickle=True)['data'])
 testing_dataset = CustomDataset(testing_data)
 test_dataloader = DataLoader(testing_dataset, batch_size=1, shuffle=True)
 for X, y in test_dataloader:
