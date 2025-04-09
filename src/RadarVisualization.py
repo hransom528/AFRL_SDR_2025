@@ -56,16 +56,16 @@ def radarUpdate(frame):
 	fig.canvas.draw()
 
 # MAIN
-#if __name__ == "__main__":
-# Creates the figure and axes object
-fig = plt.figure()
-ax = fig.add_subplot(projection='polar')
+if __name__ == "__main__":
+	# Creates the figure and axes object
+	fig = plt.figure()
+	ax = fig.add_subplot(projection='polar')
 
-# Creates the initial coordinate point
-r = 2
-theta = np.deg2rad(60)
-#staticRadarPlot((r, theta))
+	# Creates the initial coordinate point
+	r = 2
+	theta = np.deg2rad(60)
+	#staticRadarPlot((r, theta))
 
-# Creates animation object
-anim = FuncAnimation(fig, radarUpdate)
-plt.show()
+	# Creates animation object
+	anim = FuncAnimation(fig, radarUpdate)
+	plt.show()
