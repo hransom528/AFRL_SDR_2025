@@ -78,7 +78,7 @@ def staticRadarPlot(coord):
 
 	r = coord[0]
 	theta = coord[1]
-	c = ax.scatter(np.deg2rad(theta), r)
+	c = ax.scatter(np.deg2rad(theta))
 	plt.show()
 
 # Dynamic radar animation update function
@@ -87,7 +87,17 @@ def radarUpdate(frame):
     global r
     #theta += np.deg2rad(30)
     ax.clear()
-    ax.scatter(np.deg2rad(theta), r)
+    for line in ax.yaxis.get_gridlines():
+        line.set_color("g")
+
+#Change angular grid line color to green
+    for line in ax.xaxis.get_gridlines():
+        line.set_color("g")
+    ax.set_thetamin(25)
+    ax.set_thetamax(155)
+    ax.set_facecolor(color=(0.0, .15, 0.0,1))
+    ax.set_ylim([0,3])
+    ax.scatter(np.deg2rad(theta), r, s=100, color="r")
     fig.canvas.draw()
 
 # MAIN
@@ -95,25 +105,27 @@ class Switcher():
 	# Algortihm selector
     global alg
     algorithms = ["triangulation", "ml_tdoa", "ml_no_tdoa"]
-    alg = 0
-
 	# TODO: Implement different data feeds from other algorithms
 	# Triangulation button callback
     def triangulation(self, event):
+        global alg
         alg = 0
 
 	# TDoA button callback
     def tdoa(self, event):
+        global alg
         alg = 1
 
 	# ML (No Baseband) button callback
     def ml_nobaseband(self, event):
+        global alg
         alg = 2
 
 if __name__ == "__main__":
 	# Creates the figure and axes object
 	fig = plt.figure()
 	ax = fig.add_subplot(projection='polar')
+	#fig.patch.set_facecolor('k')
 
 	# Creates the initial coordinate point
 	r = 2
@@ -137,6 +149,9 @@ if __name__ == "__main__":
 
 	# Creates animation object
 	anim = FuncAnimation(fig, radarUpdate)
+	ax.set_thetamin(35)
+	ax.set_thetamax(145)
+	ax.set_ylim([0,2])
 	plt.show()
     
 dsf=2.7e9
@@ -440,7 +455,7 @@ def load_model(checkpoint_path):
 
 # Connect to and configure Tabor
 #connect()
-model=load_model('tiles_nobb10000')
+model=load_model('tiles_nobb10000_pre')
 #capture(tabor2,1)
 global loc 
 loc=1
@@ -455,6 +470,8 @@ def calc(model, tabor1, tabor2):
     global sig3
     global sig4
     global loc
+    global alg
+    alg=0
     loc=0
     c=299792458 # Speed of light
     signal_sources = 3
@@ -515,6 +532,9 @@ def calc(model, tabor1, tabor2):
             center0 = len(signals[0]) / 2 # Gets the "center" time point of the signal
             td1=(np.argmax(c1)-center0) # Get the difference between the center and max correlation samples
             td2=(np.argmax(c2)-center0)
+            if (alg==2):
+                td1=0
+                td2=0
             #td1=td1+td1/abs(td1)
             #td2=td2+td2/abs(td2)
             
@@ -563,18 +583,33 @@ def calc(model, tabor1, tabor2):
         for i in range(37):
             v1.append(est1[i][0])
             v2.append(est1[i][1])
-        with torch.no_grad():
-            pred = model([torch.tensor([v1]).to(dtype=torch.float32),torch.tensor([v2]).to(dtype=torch.float32)]).cpu().numpy().ravel()
+        
         print("ai")
-        print(triangulate(pred))
-        #radial=rect2polar(triangulate([np.argmax(review)*5-90,np.argmax(review2)*5-90]))
-        radial=rect2polar([triangulate(pred)[0],triangulate(pred)[1]])
+
+        print(alg)
+        if(alg==0):
+            radial=rect2polar(triangulate([np.argmax(review)*5-90,np.argmax(review2)*5-90]))
+        if(alg==1):
+            with torch.no_grad():
+                pred = model([torch.tensor([v1]).to(dtype=torch.float32),torch.tensor([v2]).to(dtype=torch.float32)]).cpu().numpy().ravel()
+            print(triangulate(pred))
+            radial=rect2polar([triangulate(pred)[0],triangulate(pred)[1]])
+            
+        if(alg==2):
+            with torch.no_grad():
+                pred = model([torch.tensor([v1]).to(dtype=torch.float32),torch.tensor([v2]).to(dtype=torch.float32)]).cpu().numpy().ravel()
+            print(triangulate(pred))
+            radial=rect2polar([triangulate(pred)[0],triangulate(pred)[1]])
         r = radial[0]
         theta = radial[1]
     #radarUpdate(anim)
    # staticRadarPlot(radial)
     #plt.show()
 #t1=threading.Thread(target=wam, args=())
+#t1.start()
+t2=threading.Thread(target=calc, args=(model,tabor1,tabor2))
+t2.start()
+
 #t1.start()
 t2=threading.Thread(target=calc, args=(model,tabor1,tabor2))
 t2.start()
