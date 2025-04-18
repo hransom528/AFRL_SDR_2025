@@ -103,6 +103,7 @@ def radarUpdate(frame):
 # MAIN
 class Switcher():
 	# Algortihm selector
+    global model
     global alg
     algorithms = ["triangulation", "ml_tdoa", "ml_no_tdoa"]
 	# TODO: Implement different data feeds from other algorithms
@@ -114,11 +115,15 @@ class Switcher():
 	# TDoA button callback
     def tdoa(self, event):
         global alg
+        global model
+        model=load_model('tiles_nobb10000_pre')
         alg = 1
 
 	# ML (No Baseband) button callback
     def ml_nobaseband(self, event):
         global alg
+        global model
+        model=load_model('tiles_nobb50000_notdoa')
         alg = 2
 
 if __name__ == "__main__":
@@ -455,14 +460,15 @@ def load_model(checkpoint_path):
 
 # Connect to and configure Tabor
 #connect()
-model=load_model('tiles_nobb10000_pre')
+
 #capture(tabor2,1)
 global loc 
 loc=1
 def wam():
     global loc
     loc =1000
-def calc(model, tabor1, tabor2):
+def calc( tabor1, tabor2):
+    
     global r
     global theta
     global sig1
@@ -471,6 +477,8 @@ def calc(model, tabor1, tabor2):
     global sig4
     global loc
     global alg
+    global model
+    model=load_model('tiles_nobb10000_pre')
     alg=0
     loc=0
     c=299792458 # Speed of light
@@ -596,6 +604,7 @@ def calc(model, tabor1, tabor2):
             radial=rect2polar([triangulate(pred)[0],triangulate(pred)[1]])
             
         if(alg==2):
+           
             with torch.no_grad():
                 pred = model([torch.tensor([v1]).to(dtype=torch.float32),torch.tensor([v2]).to(dtype=torch.float32)]).cpu().numpy().ravel()
             print(triangulate(pred))
@@ -607,8 +616,9 @@ def calc(model, tabor1, tabor2):
     #plt.show()
 #t1=threading.Thread(target=wam, args=())
 #t1.start()
-t2=threading.Thread(target=calc, args=(model,tabor1,tabor2))
+t2=threading.Thread(target=calc, args=(tabor1,tabor2))
 t2.start()
+
 
 #t1.start()
 t2=threading.Thread(target=calc, args=(model,tabor1,tabor2))
